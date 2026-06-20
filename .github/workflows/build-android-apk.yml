@@ -21,14 +21,34 @@ jobs:
         with:
           channel: stable
 
-      - name: Flutter pub get
-        run: flutter pub get
+      - name: Show files
+        run: |
+          pwd
+          ls -la
+          find . -maxdepth 4 -name pubspec.yaml
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: |
+          PROJECT_DIR="."
+
+          if [ ! -f "pubspec.yaml" ]; then
+            PROJECT_DIR="$(dirname "$(find . -maxdepth 4 -name pubspec.yaml | head -n 1)")"
+          fi
+
+          echo "Using project directory: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
+
+          flutter --version
+          flutter pub get
+
+          if [ ! -d "android" ]; then
+            flutter create --platforms=android .
+          fi
+
+          flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: gps-speed-app-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: "**/build/app/outputs/flutter-apk/app-release.apk"
